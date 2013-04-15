@@ -1,13 +1,19 @@
+// Copyright (c) 2013 Andrew Luetgers, MIT License
 (function() {
 
-	var root = this;
+	var root = this,
+		_ = root._;
+
+	if ("module" in root) {
+		_ = require("underscore");
+	}
 
 	if (!_) {
 		throw new Error("Mr Hiccup requires underscore.js");
 	}
 
-	var slice 					= Array.prototype.slice,
-		splice 					= Array.prototype.splice;
+	var slice = Array.prototype.slice,
+		splice = Array.prototype.splice;
 
 	// basic types -------------------------------------------------------
 	var typeStr = {lo: {}, ob: {}},
@@ -134,7 +140,7 @@
 
 		return newInstance;
 	};
-	
+
 
 	// hyper-simplistic dom node api for html string building, used by _.el for outputStrings mode
 	// EXPOSED FOR TESTING ONLY, DON'T USE THIS DIRECTLY, DOES NOT ESCAPE HTML IN STRINGS
@@ -800,6 +806,23 @@
 		}
 
 		return val;
+	}
+
+	if ("module" in root) {
+		module.exports = {
+			dom: _.dom,
+			typeof: _.typeof,
+			slice: _.slice,
+			splice: _.splice,
+			splice: _.splice,
+			combine: _.combine,
+			new: _.new,
+			node: _.node,
+			doc: _.doc,
+			el: _.el,
+			isSelector: _.isSelector,
+			_: _
+		}
 	}
 
 }());
