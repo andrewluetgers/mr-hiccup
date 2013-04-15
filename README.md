@@ -31,6 +31,7 @@ innerText and innerHTML
 	<div>some inner text</div>
 	<div id="someId"><p>some inner html</p></div>
 
+
 child nodes can be defined by nesting the syntax in an array
 
 	_.dom("ul", [
@@ -70,6 +71,25 @@ the sibling/inner text rules can combined
 	]);
 
 	<ul><li>first item</li><li></li><li>third item</li><li></li><li>fifth item</li></ul>
+
+
+
+This can become dangerous though! How do you determine the difference between a sibling span and the innerText "span"?
+
+	_.dom("span", "span");
+
+	<span></span><span></span>
+
+There is an added syntax to force the following string to be escaped and treated as innerText, it is the use of two leading commas instead of one.
+
+Escape strings with ,,
+
+	_.dom(["span",, "span"]);
+
+	<span>span</span>
+
+Note that you cannot use this convention when passing instructions as indivudual arguments to _.dom, they need to be wrapped in an array.
+
 
 To facilitate storing these dom structures in variables and then passing them into the _.dom function you can wrap everything in an array and pass that one item into the function. These will produce equivalent output.
 
