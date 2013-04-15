@@ -3,7 +3,24 @@ mr-hiccup
 
 Mr. Hiccup is a dom constructor add-on for underscore.js inspired by [Hiccup for Clojure]: https://github.com/weavejester/hiccup
 
-For usage examples:
+Load the js file after underscore.js to add the following functions
+
+_.dom - the main utility for creating DOM nodes and HTML strings
+_.js - a helper for creating script tags for javascript
+
+not yet documented
+
+_.typeof
+_.slice
+_.splice
+_.id
+_.combine
+_.new
+_.node
+_.doc
+_.el
+_.isSelector
+
 
 define a tag with css style selectors
 
@@ -88,7 +105,14 @@ Escape strings with ,,
 
 	<span>span</span>
 
-Note that you cannot use this convention when passing instructions as indivudual arguments to _.dom, they need to be wrapped in an array.
+Potentially malicious user input should always be escaped
+
+	var userInput = "<script src='evil.js'></script>"
+	_.dom(["span",, userInput]);
+
+    <span>&lt;script src='evil.js'&gt;&lt;/script&gt;</span>
+
+Note that you cannot use this convention when passing instructions as individual arguments to _.dom, they need to be wrapped in an array.
 
 
 To facilitate storing these dom structures in variables and then passing them into the _.dom function you can wrap everything in an array and pass that one item into the function. These will produce equivalent output.
