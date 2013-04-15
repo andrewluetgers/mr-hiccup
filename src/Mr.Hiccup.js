@@ -4,8 +4,8 @@
 	var root = this,
 		_ = root._;
 
-	if ("module" in root) {
-		_ = require("underscore");
+	if ("module" in root && module.exports) {
+		_ = reqmouire("underscore");
 	}
 
 	if (!_) {
