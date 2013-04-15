@@ -6,6 +6,7 @@ Mr. Hiccup is a DOM constructor add-on for underscore.js inspired by Hiccup for 
 Load the js file after underscore.js to add the following functions
 
 _.dom - the main utility for creating DOM nodes and HTML strings
+
 _.js - a helper for creating script tags for javascript
 
 not yet documented
