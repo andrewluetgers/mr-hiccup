@@ -1,7 +1,7 @@
 mr-hiccup
 =========
 
-Mr. Hiccup is a dom constructor add-on for underscore.js inspired by [Hiccup for Clojure]<https://github.com/weavejester/hiccup>
+Mr. Hiccup is a dom constructor add-on for underscore.js inspired by Hiccup for Clojure <https://github.com/weavejester/hiccup>, there is also another javascript Hiccup project <https://github.com/hns/hiccup.js>
 
 Load the js file after underscore.js to add the following functions
 
