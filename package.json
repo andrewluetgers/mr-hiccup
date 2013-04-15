@@ -1,0 +1,26 @@
+{
+	"author": "Andrew Luetgers <andrew.luetgers@gmail.com> (http://www.andrewluetgers.com/)",
+	"name": "mr-hiccup",
+	"description": "A DOM constructor add-on for underscore.js inspired by Hiccup for Clojure",
+	"version": "0.1.1",
+	"homepage": "https://github.com/andrewluetgers/mr-hiccup",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/andrewluetgers/mr-hiccup"
+	},
+	"bugs": "https://github.com/andrewluetgers/mr-hiccup/issues",
+	"main": "./lib/mr-hiccup.js",
+	"keywords": [
+		"hiccup",
+		"template",
+		"dom",
+		"html"
+	],
+	"engines": {
+		"node": "*"
+	},
+	"dependencies": {
+		"underscore": "1.4.x"
+	},
+	"license": "MIT"
+}
