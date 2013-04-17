@@ -7,7 +7,7 @@ This is an add-on for for underscore. So in the browser you'll need to load that
 
 npm module:
 
-	npm install grab
+	npm install mr-hiccup
 
 when you require the npm module it will augment root._ if it exists or add it if it doesn't
 
