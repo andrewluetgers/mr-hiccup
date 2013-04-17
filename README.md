@@ -3,7 +3,17 @@ mr-hiccup
 
 Mr. Hiccup is a DOM constructor add-on for underscore.js inspired by Hiccup for Clojure <https://github.com/weavejester/hiccup>, there is also another javascript Hiccup project <https://github.com/hns/hiccup.js>
 
-In the browser you can load the js file after underscore.js to add the following functions
+This is an add-on for for underscore. So in the browser you'll need to load that first
+
+npm module:
+
+	npm install grab
+
+when you require the npm module it will augment root._ if it exists or add it if it doesn't
+
+	require("mr-hiccup");
+
+Adds the following methods to _
 
 _.dom - the main utility for creating DOM nodes and HTML strings
 
@@ -21,13 +31,6 @@ _.node
 _.doc
 _.el
 _.isSelector
-
-In node you can require the npm module
-
-var mrHiccup = require("mr-hiccup");
-
-
-
 
 
 
