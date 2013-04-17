@@ -5,7 +5,7 @@
 		_ = root._;
 
 	if ("module" in root && module.exports) {
-		_ = reqmouire("underscore");
+		root._ = _ = require("underscore");
 	}
 
 	if (!_) {
