@@ -272,7 +272,20 @@
 
 	// for compatibility with _.el dom builder in outputStrings mode
 	var useDocument = root.document,
-		emptyString = "";
+		emptyString = "",
+		maxLength = 0,
+		tags = {},
+		splitter = /(#|\.)/,
+		whitespace = /\s+/,
+		validTags = "a abbr acronym address applet area article aside audio b base basefont bdi bdo big\
+						blockquote body br button canvas caption center cite code col colgroup command datalist\
+						dd del details dfn dir div dl dt em embed fieldset figcaption figure font footer\
+						form frame frameset h1 h2 h3 h4 h5 h6 head header hgroup hr html i iframe img input ins keygen kbd\
+						label legend li link map mark menu meta meter nav noframes noscript object ol optgroup\
+						option output p param pre progress q rp rt ruby s samp script section select small source\
+						span strike strong style sub summary sup table tbody td textarea tfoot th thead time title\
+						tr track tt u ul var video wbr";
+						// tags list derived from http://www.w3schools.com/html5/html5_reference.asp
 
 	// create nodes in real DOM or microDom from one api
 	_.doc = {
@@ -291,8 +304,62 @@
 		},
 		createElement: function(tag) {
 			return useDocument ? document.createElement(tag) : _.node(tag);
+		},
+		addTag: function(str) {
+			maxLength = Math.max(maxLength, str.length);
+			tags[str] = function(sel) {
+				return str + sel || "";
+			};
+		},
+		getTags: function() {
+			return tags;
+		},
+		// its not perfect but should get the job done
+		isSelector: function(string) {
+
+			if (string && !string.charAt) {return false;}
+
+			if (string.safe) {return false;}
+
+			// spaces are not valid in selectors, must be content, this should cover 90% of content
+			// a common case for content is innerHTML with tags so test for that if no space
+			if ((string.indexOf(" ") > -1) || (string.indexOf("<") > -1)) {
+				return false;
+			}
+
+			var parts = string.split(splitter),
+				tag = parts[0].toLowerCase();
+
+			// is it longer than any of the valid tags or is it not a valid tag?
+			if ((tag.length > maxLength) || !(tag in tags)) {
+				return false;
+			}
+
+			var partsLen = parts.length, id = "", className = "", i, j, l, name, type;
+
+			if (partsLen > 2) {
+				for (i=1, j=2, l=partsLen; j<l; i+=2, j+=2) {
+					name = parts[j];
+					type = parts[i];
+					if (type === "#") {
+						id = name;
+					} else {
+						className = className ? className + " " + name : name;
+					}
+				}
+			}
+
+			return {
+				tag: tag,
+				id: id,
+				className: className
+			};
 		}
 	};
+
+
+	_.each(validTags.split(whitespace), _.doc.addTag);
+
 
 	_.el = (function() {
 		// dom builder see: http://blog.fastmail.fm/2012/02/20/building-the-new-ajax-mail-ui-part-2-better-than-templates-building-highly-dynamic-web-pages/
@@ -318,10 +385,11 @@
 			loop: 1
 		};
 
-		var eStr = "", zero = 0;;
+		var eStr = "";
+
 		function setProperty(node, key, value) {
 			var directProp = directProperties[key];
-			var noValue = (!value && value !== zero);
+			var noValue = (!value && value !== 0);
 			if (directProp && !noValue) {
 				node[directProp] = (noValue ? eStr : eStr + value);
 			} else if (booleanProperties[key]) {
@@ -441,125 +509,49 @@
 	}());
 
 
-	_.isSelector = (function() {
-		var maxLength = 0,
-			tags = {},
-			splitter = /(#|\.)/,
-			whitespace = /\s+/,
-			validTags = "a abbr acronym address applet area article aside audio b base basefont bdi bdo big\
-							blockquote body br button canvas caption center cite code col colgroup command datalist\
-							dd del details dfn dir div dl dt em embed fieldset figcaption figure font footer\
-							form frame frameset h1 h2 h3 h4 h5 h6 head header hgroup hr html i iframe img input ins keygen kbd\
-							label legend li link map mark menu meta meter nav noframes noscript object ol optgroup\
-							option output p param pre progress q rp rt ruby s samp script section select small source\
-							span strike strong style sub summary sup table tbody td textarea tfoot th thead time title\
-							tr track tt u ul var video wbr";
-		// tags list derived from http://www.w3schools.com/html5/html5_reference.asp
-
-		_.each(validTags.split(whitespace), function(str) {
-			maxLength = Math.max(maxLength, str.length);
-			tags[str] = 1;
-		});
-
-		// its not perfect but should get the job done
-		var isSelector = function(string) {
-
-			if (string && !string.charAt) {
-				return false;
-			}
-
-			if (string.safe) {
-				return false;
-			}
-
-			// spaces are not valid in selectors, must be content, this should cover 90% of content
-			// a common case for content is innerHTML with tags so test for that if no space
-			if ((string.indexOf(" ") > -1) || (string.indexOf("<") > -1)) {
-				return false;
-			}
-
-			var parts = string.split(splitter),
-				tag = parts[0].toLowerCase();
-
-			// is it longer than any of the valid tags or is it not a valid tag?
-			if ((tag.length > maxLength) || !(tag in tags)) {
-				return false;
-			}
-
-			var partsLen = parts.length,
-				id = "", className = "",
-				i, j, l, name, type;
-
-			if (partsLen > 2) {
-				for (i=1, j=2, l=partsLen; j<l; i+=2, j+=2) {
-					name = parts[j];
-					type = parts[i];
-					if (type === "#") {
-						id = name;
-					} else {
-						className = className ? className + " " + name : name;
-					}
-				}
-			}
-
-			return {
-				tag: tag,
-				id: id,
-				className: className
-			};
-		};
-
-		isSelector.addTag = function(str) {
-			maxLength = Math.max(maxLength, str.length);
-			tags[str] = one;
-		};
-
-		return isSelector;
-	}());
 
 	/* _.dom
-	 dom instructions
-	 array == generic container for dom instructions
-	 object == attributes
-	 string == dom selector or innerHTML
+		dom instructions
+		array == generic container for dom instructions
+		object == attributes
+		string == dom selector or innerHTML
 
-	 dom instruction patterns:
+		dom instruction patterns:
 
-	 [selector (String)]
-	 selectors begin with an html tag name optionally followed by #someId and zero or more .someClass
-	 a selector can be followed by any instruction another selector, an object, an array, innerHTML string
+		[selector (String)]
+		selectors begin with an html tag name optionally followed by #someId and zero or more .someClass
+		a selector can be followed by any instruction another selector, an object, an array, innerHTML string
 
-	 [selector (String), innerHTML (String)]
-	 any string that does not look like a selector is treated as innerHTML,
-	 if your strings will look like a selector you can add non selector characters like so...
-	 invalid as innerHTML: "strong", "menu", "footer"
-	 valid as innerHTML: "<span>strong</span>", "menu "
-	 innerHTML can only be followed by a selector string
+		[selector (String), innerHTML (String)]
+		any string that does not look like a selector is treated as innerHTML,
+		if your strings will look like a selector you can add non selector characters like so...
+		invalid as innerHTML: "strong", "menu", "footer"
+		valid as innerHTML: "<span>strong</span>", "menu "
+		innerHTML can only be followed by a selector string
 
-	 [selector (String), children (Array)]
-	 an array can only be followed by a selector string
+		[selector (String), children (Array)]
+		an array can only be followed by a selector string
 
-	 [selector (String), attributes (Object)]
-	 attributes eg. {title: "my title", value: 2}
-	 an object can be followed by an array or a string (selector or innerHTML)
+		[selector (String), attributes (Object)]
+		attributes eg. {title: "my title", value: 2}
+		an object can be followed by an array or a string (selector or innerHTML)
 
-	 [selector (String), attributes (Object), children (Array)]
+		[selector (String), attributes (Object), children (Array)]
 
-	 eg.
+		eg.
 
-	 var dom = [
-	 "div", {className: "todo " + data.done ? "done" : ""},[
-	 "div.display", [
-	 "input.check", {type: "checkbox", checked: data.done},
-	 "label.todo-content", data.content,
-	 "span.todo-destroy"
-	 ],
-
-	 "div.edit", [
-	 "input.todo-input", {type: "text", value: data.content}
-	 ],
-	 "ul", _.map(data.items, _.value)
-	 ];
+		var dom = [
+			"div", {className: "todo " + data.done ? "done" : ""},[
+				"div.display", [
+				"input.check", {type: "checkbox", checked: data.done},
+				"label.todo-content", data.content,
+				"span.todo-destroy"
+			],
+			"div.edit", [
+				"input.todo-input", {type: "text", value: data.content}
+			],
+			"ul", _.map(data.items, _.value)
+		];
 	 */
 
 	_.dom = (function() {
@@ -583,12 +575,6 @@
 				prevStep = thisStep;
 				thisStep = step + "-" + _.typeof(arg);
 
-//				console.log(thisStep, arg);
-
-				if (arg === _) {
-					throw new Error("WTF");
-				}
-
 				switch(thisStep) {
 
 					// new sibling node via selector or new sibling text -------------------------------------------
@@ -596,7 +582,7 @@
 						arg += ""; // convert to string and fall through to next block
 					case "1-string":
 						if (!precedingDoubleCommaDivider) {
-							selector = preProcessedSelector || _.isSelector(arg);
+							selector = preProcessedSelector || _.doc.isSelector(arg);
 							if (selector) {
 								tag = selector.tag;
 								id = selector.id;
@@ -636,7 +622,7 @@
 					// new sibling node/s via partial --------------------------------------------------------------
 					case "1-function":
 						// todo use object expansion here to allow more return types
-						returnNodes = returnNodes.concat(arg());
+						returnNodes = returnNodes.concat(_.dom(arg()));
 						// stay on step one for next arg
 						break;
 
@@ -660,7 +646,7 @@
 						});
 
 						// oop! looks like we actually want to treat the object as children here
-						if (_val && (_val.pop || _.isSelector(_val))) {
+						if (_val && (_val.pop || _.doc.isSelector(_val))) {
 //							console.log("object as children", domInstructions);
 							// final possible step so start back on 1 for next arg
 							// this is where we do recursion, see also 2-array
@@ -677,7 +663,7 @@
 
 						id && (attributes.id = id);
 						if (className) {
-							attributes.className = arg.className ? (className + " " + arg.className) : className;  // remember we appended a space in _.isSelector
+							attributes.className = arg.className ? (className + " " + arg.className) : className;  // remember we appended a space in _.doc.isSelector
 						}
 						// create node with attributes now if final iteration
 						if (i === len-1) {
@@ -697,7 +683,7 @@
 					case "2-string":
 					case "3-string":
 						if (!precedingDoubleCommaDivider) {
-							selector = preProcessedSelector || _.isSelector(arg);
+							selector = preProcessedSelector || _.doc.isSelector(arg);
 
 							// starting a new object
 							if (selector || selfClosing[tag]) {
@@ -746,12 +732,12 @@
 						step = 1;
 						break;
 
+					case "2-function":
 					case "3-function":
-						// no children so done, functions in third position are treated as siblings
-						// function will get handled in step 1 after we finish up here
+						// no children so done, functions in second and third position are treated as siblings
 						// to produce children functions can be wrapped in an array
 						returnNodes.push(_.el(tag, attributes));
-						returnNodes = returnNodes.concat(arg());
+						returnNodes = returnNodes.concat(_.dom(arg()));
 						// final possible step so start back on 1 for next arg
 						step = 1;
 						break;
@@ -783,6 +769,78 @@
 
 	}());
 
+//
+//	$("body").html(_.dom([
+//		"table", [
+//			"thead", [
+//				"tr", [
+//					"th", "url",
+//					"th", "created",
+//					"th", "subreddit"
+//				]
+//			],
+//			"tbody", _.map(comments, function(c) { return [
+//				"tr", [
+//					"td",, commentToStoryUrl(c),
+//					"td",, new Date(c.created.epoch * 1000).toString(),
+//					"td",, c.subreddit
+//				]
+//			];})
+//		]
+//	]));
+
+
+	// partials
+	var parts = {};
+
+	/*
+	 * @param name String,
+	 * @param arg Function or object
+	 * @description this function serves as a constructor, getter, setter and collection interface to partials
+	 * there are multiple signatures and a plural alias that makes more sense depending on what you want to do
+	 * $part("name", function(data){...}) returns the provided function, saves the function under the given name so that it can be used via the following signatures
+	 * $parts() returns and object that contains all the partials by name
+	 * $parts("myPartial") returns a partial function(data) which if called returns a minidom
+	 * $parts("myPartial", dataObject)
+	 */
+	_.part = function(name, partial) {
+		if (!_.isString(name)) {
+			throw new TypeError("Expected string for name but saw " + _.typeof(name));
+		}
+
+		if (!_.isFunction(partial)) {
+			throw new TypeError("Expected function for partial but saw " + _.typeof(name));
+		}
+
+		// set new or update existing partial
+		return parts[name] = partial;
+	};
+
+
+	_.parts = function(name, defaults) {
+		if (!arguments.length) {
+			return parts;
+		}
+
+		var fn = parts[name];
+
+		if (fn) {
+			return function(data) {
+				return fn(data || defaults);
+			};
+		} else {
+			throw new Error("No such partial '"+name);
+		}
+	};
+
+	_.parts.drop = function(name) {
+		parts[name] = null;
+	};
+
+	_.parts.dropAll = function(name) {
+		parts = {};
+	};
+
 
 
 	// script tag helper
@@ -811,6 +869,8 @@
 	if ("module" in root) {
 		module.exports = {
 			dom: _.dom,
+			part: _.part,
+			parts: _.parts,
 			typeof: _.typeof,
 			slice: _.slice,
 			splice: _.splice,
@@ -820,7 +880,6 @@
 			node: _.node,
 			doc: _.doc,
 			el: _.el,
-			isSelector: _.isSelector,
 			_: _
 		}
 	}
